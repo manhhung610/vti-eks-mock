@@ -86,3 +86,15 @@ Current dev images:
 ```
 
 Because ECR repositories are immutable, use a new image tag for each future build, such as a Git commit SHA.
+
+## Dev App CI
+
+`.github/workflows/app-dev.yml` builds the frontend and backend images when files under `apps/**` change on `main`.
+
+The workflow uses GitHub OIDC to assume:
+
+```text
+arn:aws:iam::296725355870:role/hungnm-de000155-dev-github-actions-app-ci
+```
+
+It then pushes immutable images to ECR with a short commit SHA tag and updates the dev GitOps manifests. Argo CD detects that commit and rolls out the new images to EKS.

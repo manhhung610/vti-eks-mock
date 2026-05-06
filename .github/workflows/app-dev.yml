@@ -1,0 +1,76 @@
+name: app-dev
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/**"
+      - ".github/workflows/app-dev.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  AWS_REGION: ap-southeast-1
+  AWS_ROLE_ARN: arn:aws:iam::296725355870:role/hungnm-de000155-dev-github-actions-app-ci
+  ECR_REGISTRY: 296725355870.dkr.ecr.ap-southeast-1.amazonaws.com
+  FRONTEND_REPOSITORY: hungnm-de000155-dev-frontend
+  BACKEND_REPOSITORY: hungnm-de000155-dev-backend
+
+jobs:
+  build-push-update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push backend
+        run: |
+          IMAGE_TAG="${GITHUB_SHA::12}"
+          BACKEND_IMAGE="${ECR_REGISTRY}/${BACKEND_REPOSITORY}:${IMAGE_TAG}"
+          docker build -t "${BACKEND_IMAGE}" apps/backend
+          docker push "${BACKEND_IMAGE}"
+          echo "BACKEND_IMAGE=${BACKEND_IMAGE}" >> "${GITHUB_ENV}"
+
+      - name: Build and push frontend
+        run: |
+          IMAGE_TAG="${GITHUB_SHA::12}"
+          FRONTEND_IMAGE="${ECR_REGISTRY}/${FRONTEND_REPOSITORY}:${IMAGE_TAG}"
+          docker build -t "${FRONTEND_IMAGE}" apps/frontend
+          docker push "${FRONTEND_IMAGE}"
+          echo "FRONTEND_IMAGE=${FRONTEND_IMAGE}" >> "${GITHUB_ENV}"
+
+      - name: Update dev GitOps manifests
+        uses: mikefarah/yq@v4.44.3
+        with:
+          cmd: |
+            yq -i '(.spec.template.spec.containers[] | select(.name == "backend").image) = strenv(BACKEND_IMAGE)' gitops/applications/dev/backend-deployment.yaml
+            yq -i '(.spec.template.spec.containers[] | select(.name == "frontend").image) = strenv(FRONTEND_IMAGE)' gitops/applications/dev/frontend-deployment.yaml
+
+      - name: Commit GitOps image updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add gitops/applications/dev/backend-deployment.yaml gitops/applications/dev/frontend-deployment.yaml
+          if git diff --cached --quiet; then
+            echo "No GitOps image changes to commit."
+            exit 0
+          fi
+          git commit -m "Update dev app images to ${GITHUB_SHA::12}"
+          git push
+

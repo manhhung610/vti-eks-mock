@@ -97,6 +97,12 @@ variable "dns_acm" {
   })
 }
 
+variable "github_repository" {
+  description = "GitHub repository allowed to assume CI IAM roles, in owner/repo format."
+  type        = string
+  default     = "manhhung610/vti-eks-mock"
+}
+
 variable "tags" {
   description = "Additional tags."
   type        = map(string)

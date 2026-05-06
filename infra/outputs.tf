@@ -29,3 +29,7 @@ output "acm_certificate_arn" {
   value       = try(module.dns_acm[0].certificate_arn, null)
 }
 
+output "github_actions_app_ci_role_arn" {
+  description = "IAM role ARN used by GitHub Actions to build and push dev application images."
+  value       = try(aws_iam_role.github_actions_app_ci[0].arn, null)
+}
