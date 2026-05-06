@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: 296725355870.dkr.ecr.ap-southeast-1.amazonaws.com/hungnm-de000155-dev-backend:dev-v1
+          image: 296725355870.dkr.ecr.ap-southeast-1.amazonaws.com/hungnm-de000155-dev-backend:a9c20f0a6c85
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
