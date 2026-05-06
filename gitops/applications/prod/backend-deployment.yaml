@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: mock-app
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/part-of: mock-eks
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: backend
+        app.kubernetes.io/part-of: mock-eks
+    spec:
+      containers:
+        - name: backend
+          image: hashicorp/http-echo:1.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - "-listen=:8080"
+            - "-text=mock backend ok"
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: DB_HOST
+              value: REPLACE_WITH_RDS_ENDPOINT
+            - name: DB_NAME
+              value: mockapp
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+

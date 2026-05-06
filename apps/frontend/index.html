@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mock EKS Dev</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="header">
+        <div>
+          <p class="eyebrow">Dev environment</p>
+          <h1>Mock EKS Platform</h1>
+        </div>
+        <button id="refreshButton" type="button">Refresh</button>
+      </section>
+
+      <section class="status-grid" aria-label="Service status">
+        <article>
+          <span>Frontend</span>
+          <strong>Running</strong>
+        </article>
+        <article>
+          <span>Backend API</span>
+          <strong id="apiStatus">Checking</strong>
+        </article>
+        <article>
+          <span>Database config</span>
+          <strong id="dbStatus">Checking</strong>
+        </article>
+      </section>
+
+      <section class="panel">
+        <h2>Project Tasks</h2>
+        <ul id="taskList" class="task-list"></ul>
+      </section>
+
+      <section class="panel">
+        <h2>Backend Response</h2>
+        <pre id="responseBox">Waiting for API response...</pre>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
+

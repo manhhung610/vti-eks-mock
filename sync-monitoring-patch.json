@@ -1,0 +1,12 @@
+﻿{
+  "operation": {
+    "sync": {
+      "revision": "61.7.2",
+      "syncOptions": [
+        "CreateNamespace=true",
+        "ServerSideApply=true",
+        "PruneLast=true"
+      ]
+    }
+  }
+}

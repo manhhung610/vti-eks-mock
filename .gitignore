@@ -1,0 +1,14 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+tfplan
+tfplan*
+*.tfplan
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+build/
+coverage/
+__pycache__/
