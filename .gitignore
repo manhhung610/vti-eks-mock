@@ -13,3 +13,5 @@ build/
 coverage/
 __pycache__/
 README_Progress.md
+script.md
+demo-guide.md
