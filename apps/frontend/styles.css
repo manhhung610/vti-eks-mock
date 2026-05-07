@@ -96,6 +96,18 @@ button:disabled {
   margin-top: 16px;
 }
 
+.action-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.action-panel p {
+  margin: 8px 0 0;
+  color: #5b6b75;
+}
+
 .task-list {
   list-style: none;
   padding: 0;
@@ -123,6 +135,7 @@ pre {
 
 @media (max-width: 720px) {
   .header,
+  .action-panel,
   .task-list li {
     align-items: stretch;
     flex-direction: column;
@@ -136,4 +149,3 @@ pre {
     width: 100%;
   }
 }
-

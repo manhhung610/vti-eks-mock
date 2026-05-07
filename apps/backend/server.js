@@ -24,6 +24,8 @@ const items = [
   },
 ];
 
+const events = [];
+
 function sendJson(response, statusCode, payload) {
   const body = JSON.stringify(payload);
 
@@ -35,6 +37,40 @@ function sendJson(response, statusCode, payload) {
   response.end(body);
 }
 
+function logRequest(request, statusCode) {
+  console.log(
+    JSON.stringify({
+      type: "http_request",
+      method: request.method,
+      path: new URL(request.url, `http://${request.headers.host}`).pathname,
+      statusCode,
+      timestamp: new Date().toISOString(),
+    }),
+  );
+}
+
+function sendLoggedJson(request, response, statusCode, payload) {
+  logRequest(request, statusCode);
+  sendJson(response, statusCode, payload);
+}
+
+function readBody(request) {
+  return new Promise((resolve, reject) => {
+    let body = "";
+
+    request.on("data", (chunk) => {
+      body += chunk;
+      if (body.length > 1024 * 1024) {
+        request.destroy();
+        reject(new Error("request_too_large"));
+      }
+    });
+
+    request.on("end", () => resolve(body));
+    request.on("error", reject);
+  });
+}
+
 function sendText(response, statusCode, payload) {
   response.writeHead(statusCode, {
     "Content-Type": "text/plain; charset=utf-8",
@@ -43,7 +79,7 @@ function sendText(response, statusCode, payload) {
   response.end(payload);
 }
 
-const server = http.createServer((request, response) => {
+const server = http.createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host}`);
 
   if (request.method === "OPTIONS") {
@@ -56,15 +92,8 @@ const server = http.createServer((request, response) => {
     return;
   }
 
-  if (request.method !== "GET") {
-    sendJson(response, 405, {
-      error: "method_not_allowed",
-    });
-    return;
-  }
-
-  if (url.pathname === "/" || url.pathname === "/api" || url.pathname === "/api/health") {
-    sendJson(response, 200, {
+  if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/api" || url.pathname === "/api/health")) {
+    sendLoggedJson(request, response, 200, {
       service: serviceName,
       status: "ok",
       environment,
@@ -73,8 +102,8 @@ const server = http.createServer((request, response) => {
     return;
   }
 
-  if (url.pathname === "/api/status") {
-    sendJson(response, 200, {
+  if (request.method === "GET" && url.pathname === "/api/status") {
+    sendLoggedJson(request, response, 200, {
       service: serviceName,
       environment,
       database: {
@@ -86,23 +115,54 @@ const server = http.createServer((request, response) => {
         runtime: "Amazon EKS",
         delivery: "Argo CD / GitOps ready",
       },
+      interactions: {
+        totalEvents: events.length,
+        lastEvent: events.at(-1) || null,
+      },
     });
     return;
   }
 
-  if (url.pathname === "/api/items") {
-    sendJson(response, 200, {
+  if (request.method === "GET" && url.pathname === "/api/items") {
+    sendLoggedJson(request, response, 200, {
       items,
     });
     return;
   }
 
-  if (url.pathname === "/healthz") {
+  if (request.method === "POST" && url.pathname === "/api/events") {
+    try {
+      const rawBody = await readBody(request);
+      const payload = rawBody ? JSON.parse(rawBody) : {};
+      const event = {
+        id: events.length + 1,
+        source: payload.source || "frontend",
+        action: payload.action || "manual-test",
+        receivedAt: new Date().toISOString(),
+      };
+
+      events.push(event);
+      console.log(JSON.stringify({ type: "demo_event", ...event }));
+      sendLoggedJson(request, response, 201, {
+        accepted: true,
+        event,
+        totalEvents: events.length,
+      });
+    } catch (error) {
+      sendLoggedJson(request, response, 400, {
+        error: "invalid_request",
+        message: error.message,
+      });
+    }
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/healthz") {
     sendText(response, 200, "ok");
     return;
   }
 
-  sendJson(response, 404, {
+  sendLoggedJson(request, response, request.method === "GET" ? 404 : 405, {
     error: "not_found",
     path: url.pathname,
   });
@@ -111,4 +171,3 @@ const server = http.createServer((request, response) => {
 server.listen(port, "0.0.0.0", () => {
   console.log(`${serviceName} listening on ${port}`);
 });
-
