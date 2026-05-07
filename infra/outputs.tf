@@ -33,3 +33,8 @@ output "github_actions_app_ci_role_arn" {
   description = "IAM role ARN used by GitHub Actions to build and push dev application images."
   value       = try(aws_iam_role.github_actions_app_ci[0].arn, null)
 }
+
+output "aws_load_balancer_controller_role_arn" {
+  description = "IAM role ARN used by AWS Load Balancer Controller service account."
+  value       = try(aws_iam_role.aws_load_balancer_controller[0].arn, null)
+}
