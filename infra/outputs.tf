@@ -24,6 +24,12 @@ output "rds_endpoint" {
   sensitive   = true
 }
 
+output "rds_master_user_secret_arn" {
+  description = "Secrets Manager secret ARN for the RDS managed master user password."
+  value       = try(module.rds[0].master_user_secret_arn, null)
+  sensitive   = true
+}
+
 output "acm_certificate_arn" {
   description = "ACM certificate ARN."
   value       = try(module.dns_acm[0].certificate_arn, null)
@@ -32,6 +38,11 @@ output "acm_certificate_arn" {
 output "github_actions_app_ci_role_arn" {
   description = "IAM role ARN used by GitHub Actions to build and push dev application images."
   value       = try(aws_iam_role.github_actions_app_ci[0].arn, null)
+}
+
+output "github_actions_terraform_role_arn" {
+  description = "IAM role ARN used by GitHub Actions to plan and apply Terraform."
+  value       = try(aws_iam_role.github_actions_terraform[0].arn, null)
 }
 
 output "aws_load_balancer_controller_role_arn" {

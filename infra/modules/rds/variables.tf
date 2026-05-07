@@ -40,7 +40,13 @@ variable "username" {
 
 variable "password" {
   type      = string
+  default   = null
   sensitive = true
+}
+
+variable "manage_master_user_password" {
+  type    = bool
+  default = false
 }
 
 variable "backup_retention_period" {

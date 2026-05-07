@@ -41,22 +41,23 @@ module "rds" {
   source = "./modules/rds"
   count  = var.enabled_modules.rds ? 1 : 0
 
-  name_prefix             = local.name_prefix
-  vpc_id                  = module.networking[0].vpc_id
-  subnet_ids              = module.networking[0].private_db_subnet_ids
-  app_security_group_ids  = module.eks[0].node_security_group_ids
-  engine_version          = var.rds.engine_version
-  instance_class          = var.rds.instance_class
-  allocated_storage       = var.rds.allocated_storage
-  max_allocated_storage   = var.rds.max_allocated_storage
-  db_name                 = var.rds.db_name
-  username                = var.rds.username
-  password                = var.rds_password
-  backup_retention_period = var.rds.backup_retention_period
-  multi_az                = var.rds.multi_az
-  deletion_protection     = var.rds.deletion_protection
-  skip_final_snapshot     = var.rds.skip_final_snapshot
-  tags                    = local.common_tags
+  name_prefix                 = local.name_prefix
+  vpc_id                      = module.networking[0].vpc_id
+  subnet_ids                  = module.networking[0].private_db_subnet_ids
+  app_security_group_ids      = module.eks[0].node_security_group_ids
+  engine_version              = var.rds.engine_version
+  instance_class              = var.rds.instance_class
+  allocated_storage           = var.rds.allocated_storage
+  max_allocated_storage       = var.rds.max_allocated_storage
+  db_name                     = var.rds.db_name
+  username                    = var.rds.username
+  manage_master_user_password = var.rds.manage_master_user_password
+  password                    = var.rds.manage_master_user_password ? null : var.rds_password
+  backup_retention_period     = var.rds.backup_retention_period
+  multi_az                    = var.rds.multi_az
+  deletion_protection         = var.rds.deletion_protection
+  skip_final_snapshot         = var.rds.skip_final_snapshot
+  tags                        = local.common_tags
 
   depends_on = [module.networking, module.eks]
 }

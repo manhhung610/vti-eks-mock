@@ -4,6 +4,11 @@ on:
   pull_request:
     paths:
       - "infra/**"
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/**"
   workflow_dispatch:
     inputs:
       environment:
@@ -19,9 +24,39 @@ on:
         type: boolean
         default: false
 
+env:
+  AWS_REGION: ap-southeast-1
+  AWS_ROLE_ARN: arn:aws:iam::296725355870:role/hungnm-de000155-dev-github-actions-terraform
+  TF_ENVIRONMENT: ${{ github.event.inputs.environment || 'dev' }}
+
 jobs:
-  terraform:
+  validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init
+        run: terraform init -backend=false
+
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive
+
+      - name: Terraform validate
+        run: terraform validate
+
+  plan-apply:
+    runs-on: ubuntu-latest
+    needs: validate
+    if: ${{ github.event_name != 'pull_request' }}
     permissions:
       id-token: write
       contents: read
@@ -35,25 +70,18 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: REPLACE_WITH_GITHUB_ACTIONS_AWS_ROLE_ARN
-          aws-region: ap-southeast-1
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform init
-        run: terraform init -backend-config=backend-${{ inputs.environment || 'dev' }}.hcl
-
-      - name: Terraform fmt
-        run: terraform fmt -check -recursive
-
-      - name: Terraform validate
-        run: terraform validate
+        run: terraform init -backend-config=backend-${{ env.TF_ENVIRONMENT }}.hcl
 
       - name: Terraform plan
-        run: terraform plan -var-file=${{ inputs.environment || 'dev' }}.terraform.tfvars -out=tfplan
+        run: terraform plan -var-file=${{ env.TF_ENVIRONMENT }}.terraform.tfvars -out=tfplan
 
       - name: Terraform apply
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.apply == 'true' }}
         run: terraform apply -auto-approve tfplan
-

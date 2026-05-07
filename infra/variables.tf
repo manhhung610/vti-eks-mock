@@ -69,22 +69,24 @@ variable "eks" {
 variable "rds" {
   description = "RDS PostgreSQL configuration."
   type = object({
-    engine_version          = string
-    instance_class          = string
-    allocated_storage       = number
-    max_allocated_storage   = number
-    db_name                 = string
-    username                = string
-    backup_retention_period = number
-    multi_az                = bool
-    deletion_protection     = bool
-    skip_final_snapshot     = bool
+    engine_version              = string
+    instance_class              = string
+    allocated_storage           = number
+    max_allocated_storage       = number
+    db_name                     = string
+    username                    = string
+    manage_master_user_password = optional(bool, false)
+    backup_retention_period     = number
+    multi_az                    = bool
+    deletion_protection         = bool
+    skip_final_snapshot         = bool
   })
 }
 
 variable "rds_password" {
-  description = "Master password for the RDS PostgreSQL instance. Provide via TF_VAR_rds_password."
+  description = "Optional RDS master password override. Leave null to let Terraform generate a sensitive password in state."
   type        = string
+  default     = null
   sensitive   = true
 }
 
