@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: 296725355870.dkr.ecr.ap-southeast-1.amazonaws.com/hungnm-de000155-dev-frontend:a9c20f0a6c85
+          image: 296725355870.dkr.ecr.ap-southeast-1.amazonaws.com/hungnm-de000155-dev-frontend:3276531b8879
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
