@@ -4,5 +4,6 @@ resources:
   - aws-load-balancer-controller-serviceaccount.yaml
   - metrics-server.yaml
   - monitoring.yaml
+  - grafana-dashboard-mock-app.yaml
   - loki.yaml
   - aws-load-balancer-controller.yaml
